@@ -13,7 +13,12 @@ import unittest
 from contextlib import suppress
 from datetime import datetime, timedelta, timezone
 
-from pywikibot.time import Timestamp, parse_duration, str2timedelta
+from pywikibot.time import (
+    Timestamp,
+    TZoneFixedOffset,
+    parse_duration,
+    str2timedelta,
+)
 from pywikibot.tools import suppress_warnings
 from tests.aspects import TestCase
 
@@ -242,6 +247,21 @@ class TestTimestamp(TestCase):
                 ValueError,
                     f'time data {mw_ts!r} does not match MW format'):
                 Timestamp.fromtimestampformat(mw_ts, strict=True)
+
+    def test_timezone_aware_posix_timestamp(self) -> None:
+        """Test posix_timestamp with timezone-aware Timestamp."""
+        tz = TZoneFixedOffset(330, 'IST')  # UTC+5:30
+        ts_aware = Timestamp(2026, 1, 1, 12, 0, 0, tzinfo=tz)
+        ts_utc = Timestamp(2026, 1, 1, 6, 30, 0, tzinfo=timezone.utc)
+        self.assertEqual(ts_aware.posix_timestamp(), ts_utc.posix_timestamp())
+        self.assertEqual(ts_aware.posix_timestamp_format(),
+                         ts_utc.posix_timestamp_format())
+
+    def test_timezone_aware_totimestampformat(self) -> None:
+        """Test totimestampformat with timezone-aware Timestamp."""
+        tz = TZoneFixedOffset(330, 'IST')  # UTC+5:30
+        ts_aware = Timestamp(2026, 1, 1, 12, 0, 0, tzinfo=tz)
+        self.assertEqual(ts_aware.totimestampformat(), '20260101063000')
 
     def test_add_timedelta(self) -> None:
         """Test adding a timedelta to a Timestamp."""

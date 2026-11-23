@@ -365,6 +365,9 @@ class Timestamp(datetime.datetime):
 
     def totimestampformat(self) -> str:
         """Convert object to a MediaWiki internal timestamp."""
+        if self.tzinfo is not None:
+            return self.astimezone(datetime.timezone.utc).strftime(
+                self.mediawikiTSFormat)
         return self.strftime(self.mediawikiTSFormat)
 
     def posix_timestamp(self) -> float:
@@ -374,7 +377,9 @@ class Timestamp(datetime.datetime):
 
         .. version-added:: 7.5
         """
-        return self.replace(tzinfo=datetime.timezone.utc).timestamp()
+        if self.tzinfo is None:
+            return self.replace(tzinfo=datetime.timezone.utc).timestamp()
+        return self.timestamp()
 
     def posix_timestamp_format(self) -> str:
         """Convert object to a POSIX timestamp format.
