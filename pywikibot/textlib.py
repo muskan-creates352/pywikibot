@@ -2267,22 +2267,33 @@ def does_text_contain_section(pagetext: str, section: str) -> bool:
 
     .. version-changed:: 11.9
        Legacy dot-escaped section titles are supported.
+    .. version-changed:: 12.0
+       Ignore disabled parts and mid-line text.
 
     :param pagetext: The wikitext of a page
     :param section: A section of a page including wikitext markups
     """
+    headings = _extract_headings(pagetext)
+    if not headings:
+        return False
+
     # match preceding colon for text links
     section_regex = re.sub(
         r'\\\[\\\[(\\?:)?', r'\[\[\:?', re.escape(section))
     # match underscores and white spaces
     section_regex = re.sub(r'\\?[ _]', '[ _]', section_regex)
-    if re.search(f"=+[ ']*{section_regex}[ ']*=+", pagetext):
-        return True
+    pattern = re.compile(f"^=+[ ']*{section_regex}[ ']*=+$")
+
+    for h in headings:
+        text = removeDisabledParts(h.text)
+        if pattern.search(text):
+            return True
 
     # Encode headings instead of decoding ambiguous literal dot sequences.
     section = section.replace(' ', '_')
-    for match in get_regexes('header')[0].finditer(pagetext):
-        heading = Section(match[1], '').heading.replace(' ', '_')
+    for h in headings:
+        heading_text = removeDisabledParts(h.text)
+        heading = Section(heading_text, '').heading.replace(' ', '_')
         # Legacy anchors escape '~', which quote() always leaves safe.
         encoded = quote(heading, safe=':').replace('~', '%7E')
         if encoded.replace('%', '.') == section:

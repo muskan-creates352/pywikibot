@@ -116,6 +116,28 @@ class TestSectionFunctions(TestCase):
         self.assertNotContains('Helpful tips',
                                'section header must contain a link')
 
+    def test_disabled_parts_in_section(self) -> None:
+        """Test that disabled parts like comments and nowiki are ignored."""
+        self.assertFalse(textlib.does_text_contain_section(
+            '<!-- == Hidden == -->', 'Hidden'))
+        self.assertFalse(textlib.does_text_contain_section(
+            '<nowiki>== Code Example ==</nowiki>', 'Code Example'))
+        self.assertFalse(textlib.does_text_contain_section(
+            '<pre>== Pre Example ==</pre>', 'Pre Example'))
+        self.assertTrue(textlib.does_text_contain_section(
+            '== Section <!-- comment --> ==', 'Section'))
+
+    def test_midline_and_inline_section(self) -> None:
+        """Test that mid-line text and inline text are not matched."""
+        self.assertFalse(textlib.does_text_contain_section(
+            'Some text on the same line == Section ==', 'Section'))
+        self.assertFalse(textlib.does_text_contain_section(
+            'Formula a=1 and b=Target=c in text', 'Target'))
+        self.assertFalse(textlib.does_text_contain_section(
+            '=== Foo = Bar ===', 'Foo'))
+        self.assertTrue(textlib.does_text_contain_section(
+            '=== Foo = Bar ===', 'Foo = Bar'))
+
 
 class TestFormatInterwiki(TestCase):
 
