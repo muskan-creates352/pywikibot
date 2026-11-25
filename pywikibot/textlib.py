@@ -1309,8 +1309,11 @@ class Content(NamedTuple):
         The first main title is anything enclosed within triple quotes.
 
         .. version-added:: 8.2
+        .. version-changed:: 12.0
+           Ignore disabled parts like comments or nowiki tags.
         """
-        m = TITLE_PATTERN.search(self.header)
+        header = removeDisabledParts(self.header)
+        m = TITLE_PATTERN.search(header)
         return m[1].strip() if m else ''
 
 

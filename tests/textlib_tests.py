@@ -1904,6 +1904,27 @@ class TestExtractSections(DefaultSiteTestCase):
             title='Pywikibot'
         )
 
+    def test_title_disabled_parts(self) -> None:
+        """Test title ignores disabled parts like comments and nowiki."""
+        text = "<!-- '''comment title''' -->\n'''Real Title''' is a page."
+        result = extract_sections(text, self.site)
+        self.assertEqual(result.title, 'Real Title')
+
+        text = (
+            "<nowiki>'''nowiki title'''</nowiki>\n"
+            "'''Real Title''' is a page."
+        )
+        result = extract_sections(text, self.site)
+        self.assertEqual(result.title, 'Real Title')
+
+        text = "<pre>'''pre title'''</pre>\n'''Real Title''' is a page."
+        result = extract_sections(text, self.site)
+        self.assertEqual(result.title, 'Real Title')
+
+        text = "<!-- '''only comment''' -->\nNo title here."
+        result = extract_sections(text, self.site)
+        self.assertEqual(result.title, '')
+
     def test_index(self) -> None:
         """Test index behaviour of SectionList."""
         text = """
