@@ -314,6 +314,63 @@ class TestReplaceCategoryLinks(TestCase):
             f'foo\n\n{categories}\n\n{stub}\n\n{interwiki}')
 
 
+class TestMarker(TestCase):
+
+    """Test findmarker and expandmarker functions."""
+
+    net = False
+
+    def test_findmarker(self) -> None:
+        """Test findmarker."""
+        text = 'Hello @ world'
+        marker = textlib.findmarker(text)
+        self.assertNotIn(marker, text)
+
+    def test_expandmarker_empty_separator(self) -> None:
+        """Test expandmarker with empty separator."""
+        self.assertEqual(textlib.expandmarker('Hello @C@', '@C@', ''), '@C@')
+
+    def test_expandmarker_not_in_text(self) -> None:
+        """Test expandmarker when marker is not in text."""
+        self.assertEqual(textlib.expandmarker('Hello', '@C@', '--'), '@C@')
+
+    def test_expandmarker_whitespace_and_separator(self) -> None:
+        """Test expandmarker with spaces, newlines, and unicode spaces."""
+        # Standard newline and separator
+        self.assertEqual(
+            textlib.expandmarker('Hello\n----\n@C@', '@C@', '----'),
+            '\n----\n@C@'
+        )
+        # Space directly before marker (T446371)
+        self.assertEqual(
+            textlib.expandmarker('Hello -- @C@', '@C@', '--'),
+            ' -- @C@'
+        )
+        # Spaces around separator (T446371)
+        self.assertEqual(
+            textlib.expandmarker('Hello\n -- \n@C@', '@C@', '--'),
+            '\n -- \n@C@'
+        )
+        # Spaces between multiple separators (T446371)
+        self.assertEqual(
+            textlib.expandmarker('Hello\n-- --\n@C@', '@C@', '--'),
+            '\n-- --\n@C@'
+        )
+        # Unicode whitespace before separator (T446371)
+        self.assertEqual(
+            textlib.expandmarker('Hello\u00a0--\u00a0@C@', '@C@', '--'),
+            '\u00a0--\u00a0@C@'
+        )
+
+    def test_remove_category_links_and_separator_spaces(self) -> None:
+        """Test category link separator removal with surrounding spaces."""
+        site = pywikibot.site.BaseSite('en', 'wikipedia')
+        text = 'Article text\n -- \n[[Category:Test]]'
+        res = textlib.removeCategoryLinksAndSeparator(
+            text, site=site, separator='--')
+        self.assertEqual(res, 'Article text')
+
+
 class TestTemplatesInCategory(TestCase):
 
     """Tests to verify that templates in category links are handled."""

@@ -800,6 +800,10 @@ def expandmarker(text: str, marker: str = '', separator: str = '') -> str:
     It searches for the first occurrence of the marker and gets the
     combination of the separator and whitespace directly before it.
 
+    .. version-changed:: 12.0
+       Whitespace characters including spaces and Unicode spaces are
+       matched.
+
     :param text: The text which will be searched.
     :param marker: The marker to be searched.
     :param separator: The separator string allowed before the marker. If
@@ -813,6 +817,9 @@ def expandmarker(text: str, marker: str = '', separator: str = '') -> str:
     # by allowing to include them into marker.
     if separator:
         firstinmarker = text.find(marker)
+        if firstinmarker < 0:
+            return marker
+
         firstinseparator = firstinmarker
         lenseparator = len(separator)
         striploopcontinue = True
@@ -823,7 +830,7 @@ def expandmarker(text: str, marker: str = '', separator: str = '') -> str:
                                       - lenseparator:firstinseparator]):
                 firstinseparator -= lenseparator
                 striploopcontinue = True
-            elif text[firstinseparator - 1] < ' ':
+            elif text[firstinseparator - 1].isspace():
                 firstinseparator -= 1
                 striploopcontinue = True
         marker = text[firstinseparator:firstinmarker] + marker
